@@ -57,10 +57,11 @@ function displayPage(page) {
 
 function createCardElement(fancam) {
     // Create the main card container
-    let card = document.createElement('div');
+    let card = document.createElement('a');
+    card.href = `../fancam/${fancam.fancam.fancamidx}`;
     card.className = 'card text-white bg-primary mb-3';
     card.style.maxWidth = '100%';
-
+    card.style.textDecoration = 'none'; // 링크 아래줄 제거
     // Create the card header
     let cardHeader = document.createElement('div');
     cardHeader.className = 'card-header';

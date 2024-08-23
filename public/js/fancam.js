@@ -1,4 +1,15 @@
-let fetchUrl = 'http://localhost:8080/search/${fancamIdx}'
+// URL에서 ID 값을 추출하는 함수
+function getFancamIdFromURL() {
+    const pathParts = window.location.pathname.split('/');
+    return pathParts[pathParts.length - 1];
+}
+
+// ID 값을 추출
+const id = Number(getFancamIdFromURL());
+
+console.log(id);
+const fetchUrl = `http://localhost:8080/search/${id}`
+
 
 async function getArticle(fetchUrl){
     try{
@@ -33,21 +44,36 @@ function createCard(fancam) {
     card.className = 'card mb-3';
     card.style.marginTop = '10px';
 
+
+
     // Card header (Date)
     const header = document.createElement('h3');
     header.className = 'card-header';
     header.textContent = fancam.fancam.date;
     card.appendChild(header);
 
-    // Card image
-    const img = document.createElement('img');
-    img.src = fancam.fancam.fancam_url;
-    img.alt = 'YouTube Thumbnail';
-    img.style.width = '100%';
-    img.style.height = '100%';
-    card.appendChild(img);
+    const iframeWrapper = document.createElement('div');
+    iframeWrapper.style.position = 'relative';
+    iframeWrapper.style.width = '100%';
+    iframeWrapper.style.paddingTop = '56.25%'; // 16:9 비율 유지
 
-    // Card body (Description)
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube.com/embed/${fancam.fancam.fancam_url}?controls=0`; // fancam.fancam.fancam_url에 비디오 ID가 들어있다고 가정
+    iframe.title = "YouTube video player";
+    iframe.style.position = 'absolute';
+    iframe.style.top = '0';
+    iframe.style.left = '0';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = '0';
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    iframe.allowFullscreen = true;
+
+    iframeWrapper.appendChild(iframe);
+    card.appendChild(iframeWrapper);
+
+
     const body = document.createElement('div');
     body.className = 'card-body';
 
@@ -188,7 +214,7 @@ function createCard(fancam) {
     // Card footer
     const footer = document.createElement('div');
     footer.className = 'card-footer text-muted';
-    footer.textContent = footerText;
+    footer.textContent = "2 days ago";
     card.appendChild(footer);
 
     return card;

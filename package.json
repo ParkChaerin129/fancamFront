@@ -2,6 +2,10 @@
   "name": "fancamFront",
   "version": "1.0.0",
   "dependencies": {
-    "@eonasdan/tempus-dominus": "^6.9.10"
+    "@eonasdan/tempus-dominus": "^6.9.10",
+    "express": "^4.19.2"
+  },
+  "scripts": {
+    "start": "node restServer.js"
   }
 }
