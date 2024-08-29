@@ -128,7 +128,7 @@ function createCard(fancam) {
     likeInput.type = 'checkbox';
     likeInput.className = 'btn-check';
     likeInput.id = 'btncheck1';
-    likeInput.checked = true;
+    likeInput.checked = isLiked();
     likeInput.autocomplete = 'off';
 
     const likeLabel = document.createElement('label');
@@ -142,6 +142,11 @@ function createCard(fancam) {
     likeWrapper.appendChild(likeGroup);
     likeItem.appendChild(likeWrapper);
     listGroup.appendChild(likeItem);
+
+    // 체크박스 클릭 이벤트 핸들러 설정
+    likeInput.addEventListener('change', () => {
+        handleLikeCheckboxChange(likeInput, likeLabel);
+    });
 
     // Add to folder button with offcanvas
     const addItem = document.createElement('li');
@@ -221,6 +226,95 @@ function createCard(fancam) {
 
     // Append the card to the document body or another container
     //document.body.appendChild(card); // 예를 들어 body에 추가, 다른 요소에 append할 수 있음
+}
+
+
+function handleLikeCheckboxChange(likeInput, likeLabel) {
+    let likeCount = parseInt(likeLabel.textContent.replace('좋아요 ', '').replace('개', ''), 10);
+
+    const sessionKey=localStorage.getItem("sessionKey");
+
+    if(sessionKey==null){
+        alert('로그인이 필요합니다. 로그인 후 다시 시도해주세요.');
+        likeInput.checked = !likeInput.checked; // 체크 상태를 원래대로 돌림
+        return;
+    }
+
+    if (likeInput.checked) {
+        likeCount++;
+    } else {
+        likeCount--;
+    }
+
+    likeLabel.textContent = `좋아요 ${likeCount}개`;
+
+    // 추가적인 로직 (서버에 좋아요 수를 업데이트하는 등)을 여기에 추가
+    updateLikeStatusOnServer(likeInput.checked, sessionKey);
+}
+
+function updateLikeStatusOnServer(isLiked, sessionKey) {
+    const url = `http://localhost:8080/user/like/${id}`;
+    const method = isLiked ? 'POST' : 'PATCH';  // 좋아요 추가는 POST, 좋아요 취소는 PATCH로 가정
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionKey}`  // 세션 키를 Authorization 헤더에 포함
+        },
+        body: JSON.stringify({ like: isLiked })
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('서버 요청 실패');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('서버 응답:', data);
+            // 서버 응답에 따른 추가적인 로직을 여기에 작성
+        })
+        .catch(error => {
+            console.error('좋아요 상태 업데이트 중 오류 발생:', error);
+        });
+}
+
+async function isLiked() {
+    const sessionKey = localStorage.getItem("sessionKey");
+
+    if (sessionKey === null) {
+        return false;
+    }
+
+    const url = `http://localhost:8080/user/like/${id}`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionKey}`  // 세션 키를 Authorization 헤더에 포함
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('서버 요청 실패');
+        }
+
+        const result = await response.text();
+        console.log('서버 응답 텍스트:', result);
+
+        if (result === "false") {
+            return false;
+        } else if (result === "true") {
+            return true;
+        } else {
+            throw new Error('예상치 못한 서버 응답');
+        }
+    } catch (error) {
+        console.error('좋아요 상태 확인 중 오류 발생:', error);
+        return false; // 오류가 발생하면 기본적으로 false를 반환
+    }
 }
 
 getArticle(fetchUrl);
