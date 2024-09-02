@@ -128,7 +128,10 @@ function createCard(fancam) {
     likeInput.type = 'checkbox';
     likeInput.className = 'btn-check';
     likeInput.id = 'btncheck1';
-    likeInput.checked = isLiked();
+    isLiked().then(result=>{
+        likeInput.checked = !!result;
+    })
+
     likeInput.autocomplete = 'off';
 
     const likeLabel = document.createElement('label');
@@ -163,55 +166,20 @@ function createCard(fancam) {
     addButton.setAttribute('data-bs-toggle', 'offcanvas');
     addButton.setAttribute('data-bs-target', '#offcanvasExample');
     addButton.setAttribute('aria-controls', 'offcanvasExample');
-    addButton.textContent = '나의 폴더 추가';
+    addButton.textContent = '나의 폴더에 추가';
+
+    addButton.addEventListener('click', () => {
+        const sessionKey = localStorage.getItem("sessionKey");
+        if (sessionKey === null) {
+            alert('로그인이 필요합니다. 로그인 후 다시 시도해주세요.');
+            return; // 세션 키가 없으면 오프캔버스가 열리지 않도록 중단
+        }
+    });
 
     buttonWrapper.appendChild(addButton);
     addItem.appendChild(buttonWrapper);
 
-    const offcanvas = document.createElement('div');
-    offcanvas.className = 'offcanvas offcanvas-start';
-    offcanvas.tabIndex = '-1';
-    offcanvas.id = 'offcanvasExample';
-    offcanvas.setAttribute('aria-labelledby', 'offcanvasExampleLabel');
-
-    const offcanvasHeader = document.createElement('div');
-    offcanvasHeader.className = 'offcanvas-header';
-
-    const offcanvasTitle = document.createElement('h5');
-    offcanvasTitle.className = 'offcanvas-title';
-    offcanvasTitle.id = 'offcanvasExampleLabel';
-    offcanvasTitle.textContent = 'Offcanvas';
-
-    const closeButton = document.createElement('button');
-    closeButton.type = 'button';
-    closeButton.className = 'btn-close text-reset';
-    closeButton.setAttribute('data-bs-dismiss', 'offcanvas');
-    closeButton.setAttribute('aria-label', 'Close');
-
-    offcanvasHeader.appendChild(offcanvasTitle);
-    offcanvasHeader.appendChild(closeButton);
-    offcanvas.appendChild(offcanvasHeader);
-
-    const offcanvasBody = document.createElement('div');
-    offcanvasBody.className = 'offcanvas-body';
-    offcanvasBody.innerHTML = `
-        <div>
-            Some text as placeholder. In real life you can have the elements you have chosen. Like, text, images, lists, etc.
-        </div>
-        <div class="dropdown mt-3">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                Dropdown button
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <li><a class="dropdown-item" href="#">Action</a></li>
-                <li><a class="dropdown-item" href="#">Another action</a></li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
-            </ul>
-        </div>
-    `;
-
-    offcanvas.appendChild(offcanvasBody);
-    addItem.appendChild(offcanvas);
+    addItem.appendChild(folderCard());
 
     listGroup.appendChild(addItem);
     card.appendChild(listGroup);
@@ -228,6 +196,164 @@ function createCard(fancam) {
     //document.body.appendChild(card); // 예를 들어 body에 추가, 다른 요소에 append할 수 있음
 }
 
+function folderCard() {
+    const sessionKey = localStorage.getItem("sessionKey");
+
+    const offcanvas = document.createElement('div');
+    offcanvas.className = 'offcanvas offcanvas-start';
+    offcanvas.tabIndex = '-1';
+    offcanvas.id = 'offcanvasExample';
+    offcanvas.setAttribute('aria-labelledby', 'offcanvasExampleLabel');
+
+    const offcanvasHeader = document.createElement('div');
+    offcanvasHeader.className = 'offcanvas-header';
+
+    const offcanvasTitle = document.createElement('h5');
+    offcanvasTitle.className = 'offcanvas-title';
+    offcanvasTitle.id = 'offcanvasExampleLabel';
+    offcanvasTitle.textContent = '나의 폴더에 추가';
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close text-reset';
+    closeButton.setAttribute('data-bs-dismiss', 'offcanvas');
+    closeButton.setAttribute('aria-label', 'Close');
+
+    offcanvasHeader.appendChild(offcanvasTitle);
+    offcanvasHeader.appendChild(closeButton);
+    offcanvas.appendChild(offcanvasHeader);
+
+    const offcanvasBody = document.createElement('div');
+    offcanvasBody.className = 'offcanvas-body';
+
+    const container = document.createElement('div');
+    container.className = 'input-group mb-3';
+
+    // 입력 필드 생성
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control';
+    input.placeholder = "폴더 이름 입력";
+    input.setAttribute('aria-label', "Recipient's username");
+    input.setAttribute('aria-describedby', 'button-addon2');
+
+    // 버튼 생성
+    const button = document.createElement('button');
+    button.className = 'btn btn-primary';
+    button.type = 'button';
+    button.id = 'button-addon2';
+    button.textContent = '추가';
+
+    // 폴더 목록을 가져와 새로고침하는 함수
+    function refreshFolderList() {
+        fetch('http://localhost:8080/user/folder', {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionKey}`
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                // 폴더 목록을 초기화
+                folderList.innerHTML = '';
+
+                // 서버로부터 받은 폴더 목록(data)을 반복적으로 <li> 요소로 생성하여 추가
+                data.forEach(folder => {
+                    const newFolder = document.createElement('li');
+                    newFolder.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    newFolder.textContent = folder.folderName; // 폴더 이름 설정
+
+                    newFolder.dataset.folderIdx = folder.folderIdx;
+
+                    // 새 배지 <span> 요소 생성 (폴더의 항목 수는 0으로 초기화)
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-primary rounded-pill';
+                    badge.textContent = '0'; // 폴더 항목 수 (초기값 0)
+
+                    // <li>에 <span> 추가
+                    newFolder.appendChild(badge);
+                    folderList.appendChild(newFolder);
+
+                    newFolder.addEventListener('click', function() {
+                        const folderIdx = newFolder.dataset.folderIdx;
+                        showConfirmationModal(folder.folderName, function() {
+                            addFancamToFolder(folderIdx, id);
+                        });
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('폴더 목록을 가져오는 중 에러가 발생했습니다:', error);
+            });
+    }
+
+    // 폴더 추가 버튼 클릭 이벤트
+    button.addEventListener('click', function() {
+        const folderName = input.value; // 입력된 폴더 이름 가져오기
+
+        if (folderName) {
+            // 서버에 POST 요청 보내기
+            fetch('http://localhost:8080/user/folder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${sessionKey}`
+                },
+                body: JSON.stringify({ folderName: folderName })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('폴더가 성공적으로 추가되었습니다.');
+                        // 폴더가 추가되면 목록 새로고침
+                        refreshFolderList();
+                    } else {
+                        console.error('폴더 추가에 실패했습니다.');
+                    }
+                })
+                .catch(error => {
+                    console.error('에러 발생:', error);
+                });
+        } else {
+            alert('폴더 이름을 입력하세요.');
+        }
+    });
+
+    // 입력 필드와 버튼을 컨테이너에 추가
+    container.appendChild(input);
+    container.appendChild(button);
+    offcanvasBody.appendChild(container);
+
+    const folderList = document.createElement('ul');
+    folderList.className = "list-group";
+
+    // 페이지 로드 시 폴더 목록을 가져옴
+    refreshFolderList();
+
+    offcanvasBody.appendChild(folderList);
+    offcanvas.appendChild(offcanvasBody);
+    return offcanvas;
+}
+
+function addFancamToFolder(folderIdx, fancamIdx) {
+    fetch(`http://localhost:8080/user/folder/${fancamIdx}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'//,
+            //'Authorization': `Bearer ${sessionKey}`
+        },
+        body: JSON.stringify({ folderIdx: folderIdx })
+    })
+        .then(response => {
+            if (response.ok) {
+                alert('팬캠이 폴더에 성공적으로 추가되었습니다.');
+            } else {
+                alert('팬캠을 폴더에 추가하는데 실패했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('팬캠 추가 중 에러가 발생했습니다:', error);
+        });
+}
 
 function handleLikeCheckboxChange(likeInput, likeLabel) {
     let likeCount = parseInt(likeLabel.textContent.replace('좋아요 ', '').replace('개', ''), 10);
@@ -268,7 +394,7 @@ function updateLikeStatusOnServer(isLiked, sessionKey) {
             if (!response.ok) {
                 throw new Error('서버 요청 실패');
             }
-            return response.json();
+            return response.text();
         })
         .then(data => {
             console.log('서버 응답:', data);
@@ -279,42 +405,120 @@ function updateLikeStatusOnServer(isLiked, sessionKey) {
         });
 }
 
-async function isLiked() {
+function isLiked() {
     const sessionKey = localStorage.getItem("sessionKey");
 
     if (sessionKey === null) {
-        return false;
+        return Promise.resolve(false);
     }
 
     const url = `http://localhost:8080/user/like/${id}`;
 
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${sessionKey}`  // 세션 키를 Authorization 헤더에 포함
+    return fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionKey}`  // 세션 키를 Authorization 헤더에 포함
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('서버 요청 실패');
             }
+            return response.text();
+        })
+        .then(result => {
+            console.log(typeof result);
+            console.log('서버 응답 텍스트:', result);
+
+            if (result === "false") {
+                return false;
+            } else if (result === "true") {
+                return true;
+            } else {
+                throw new Error('예상치 못한 서버 응답');
+            }
+        })
+        .catch(error => {
+            console.error('좋아요 상태 확인 중 오류 발생:', error);
+            return false; // 오류가 발생하면 기본적으로 false를 반환
         });
-
-        if (!response.ok) {
-            throw new Error('서버 요청 실패');
-        }
-
-        const result = await response.text();
-        console.log('서버 응답 텍스트:', result);
-
-        if (result === "false") {
-            return false;
-        } else if (result === "true") {
-            return true;
-        } else {
-            throw new Error('예상치 못한 서버 응답');
-        }
-    } catch (error) {
-        console.error('좋아요 상태 확인 중 오류 발생:', error);
-        return false; // 오류가 발생하면 기본적으로 false를 반환
-    }
 }
+function showConfirmationModal(folderName, onConfirm) {
+    // 모달 요소 생성
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.tabIndex = '-1';
+    modal.setAttribute('role', 'dialog');
+
+    const modalDialog = document.createElement('div');
+    modalDialog.className = 'modal-dialog';
+    modalDialog.setAttribute('role', 'document');
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+
+    const modalHeader = document.createElement('div');
+    modalHeader.className = 'modal-header';
+
+    const modalTitle = document.createElement('h5');
+    modalTitle.className = 'modal-title';
+    modalTitle.textContent = '확인';
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'modal');
+    closeButton.setAttribute('aria-label', 'Close');
+
+    modalHeader.appendChild(modalTitle);
+    modalHeader.appendChild(closeButton);
+
+    const modalBody = document.createElement('div');
+    modalBody.className = 'modal-body';
+    modalBody.textContent = `'${folderName}' 폴더에 팬캠을 추가하시겠습니까?`;
+
+    const modalFooter = document.createElement('div');
+    modalFooter.className = 'modal-footer';
+
+    const confirmButton = document.createElement('button');
+    confirmButton.type = 'button';
+    confirmButton.className = 'btn btn-primary';
+    confirmButton.textContent = '추가';
+    confirmButton.addEventListener('click', function() {
+        onConfirm();
+        const modalElement = bootstrap.Modal.getInstance(modal);
+        modalElement.hide();
+    });
+
+    const cancelButton = document.createElement('button');
+    cancelButton.type = 'button';
+    cancelButton.className = 'btn btn-secondary';
+    cancelButton.setAttribute('data-bs-dismiss', 'modal');
+    cancelButton.textContent = '취소';
+
+    modalFooter.appendChild(cancelButton);
+    modalFooter.appendChild(confirmButton);
+
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(modalBody);
+    modalContent.appendChild(modalFooter);
+
+    modalDialog.appendChild(modalContent);
+    modal.appendChild(modalDialog);
+
+    document.body.appendChild(modal);
+
+    // 모달 표시
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+
+    // 모달이 닫히면 DOM에서 제거
+    modal.addEventListener('hidden.bs.modal', function() {
+        modal.remove();
+    });
+}
+
+// 폴더 클릭 이벤트에서 사용 예시
 
 getArticle(fetchUrl);
