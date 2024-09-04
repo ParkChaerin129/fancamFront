@@ -266,12 +266,12 @@ function folderCard() {
                     newFolder.dataset.folderIdx = folder.folderIdx;
 
                     // 새 배지 <span> 요소 생성 (폴더의 항목 수는 0으로 초기화)
-                    const badge = document.createElement('span');
-                    badge.className = 'badge bg-primary rounded-pill';
-                    badge.textContent = '0'; // 폴더 항목 수 (초기값 0)
+                    //const badge = document.createElement('span');
+                    //badge.className = 'badge bg-primary rounded-pill';
+                    //badge.textContent = '0'; // 폴더 항목 수 (초기값 0)
 
                     // <li>에 <span> 추가
-                    newFolder.appendChild(badge);
+                    //newFolder.appendChild(badge);
                     folderList.appendChild(newFolder);
 
                     newFolder.addEventListener('click', function() {
