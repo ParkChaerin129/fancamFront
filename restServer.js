@@ -33,6 +33,16 @@ app.get('/addFancam', (req, res) => {
     res.sendFile(path.join(__dirname, 'template', 'addFancam.html'));
 });
 
+app.get('/search', (req, res) => {
+    // `fancam.html` 파일을 클라이언트에 전송
+    res.sendFile(path.join(__dirname, 'template', 'search.html'));
+});
+
+app.get('/header', (req, res) => {
+    // `fancam.html` 파일을 클라이언트에 전송
+    res.sendFile(path.join(__dirname, 'template', 'header.html'));
+});
+
 
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
