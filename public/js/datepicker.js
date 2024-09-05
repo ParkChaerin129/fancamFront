@@ -30,7 +30,6 @@ new tempusDominus.TempusDominus(document.getElementById('datetimepicker4'), {
         locale: 'en'
     },
     restrictions: {
-        // 현재 날짜 이후만 선택 가능
-        minDate: new Date(Date.now())
+
     }
 });
