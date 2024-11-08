@@ -43,6 +43,11 @@ app.get('/search/tag/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'template', 'searchTag.html'));
 });
 
+app.get('/search/date/:id', (req, res) => {
+    // `fancam.html` 파일을 클라이언트에 전송
+    res.sendFile(path.join(__dirname, 'template', 'searchDate.html'));
+});
+
 app.get('/header', (req, res) => {
     // `fancam.html` 파일을 클라이언트에 전송
     res.sendFile(path.join(__dirname, 'template', 'header.html'));

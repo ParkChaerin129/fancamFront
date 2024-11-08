@@ -1,30 +1,14 @@
 // URL에서 쿼리 파라미터 읽기
-const urlParams = new URLSearchParams(window.location.search);
-const query = urlParams.get('q');
-
-/*if (query) {
-    // 백엔드에 검색 요청 보내기
-    fetch(`http://localhost:8080/search/name?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            // 검색 결과를 화면에 표시
-            const resultsContainer = document.getElementById('search-results');
-            if (data.length > 0) {
-                data.forEach(result => {
-                    const div = document.createElement('div');
-                    div.innerHTML = `<p>${result.name}</p>`;
-                    resultsContainer.appendChild(div);
-                });
-            } else {
-                resultsContainer.innerHTML = '<p>검색 결과가 없습니다.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching search results:', error);
-        });
+function getFancamIdFromURL() {
+    const pathParts = window.location.pathname.split('/');
+    return pathParts[pathParts.length - 1];
 }
-*/
-let fetchUrl = `http://localhost:8080/search/name?q=${encodeURIComponent(query)}`;
+
+// ID 값을 추출
+const id = getFancamIdFromURL()
+
+console.log(id);
+const fetchUrl = `http://localhost:8080/search/date/${id}`
 
 let currentPage = 1;
 let itemsPerPage = 4;
@@ -37,7 +21,8 @@ async function getArticle(fetchUrl) {
     title.innerHTML = '';
     let h3 = document.createElement('h3');
     h3.className="card-header";
-    h3.textContent='\''+query+'\'의 검색결과';
+    const decodedDateName = decodeURIComponent(id);
+    h3.textContent='날짜 '+'\''+decodedDateName+'\'의 검색결과';
     title.appendChild(h3);
 
     try {
