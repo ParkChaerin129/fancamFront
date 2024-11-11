@@ -23,6 +23,11 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'template', 'login.html'));
 });
 
+app.get('/register', (req, res) => {
+    // `fancam.html` 파일을 클라이언트에 전송
+    res.sendFile(path.join(__dirname, 'template', 'register.html'));
+});
+
 app.get('/folder', (req, res) => {
     // `fancam.html` 파일을 클라이언트에 전송
     res.sendFile(path.join(__dirname, 'template', 'folder.html'));
